@@ -13,7 +13,7 @@ namespace AS.Application.Handlers
     {
         public Task Handle(SendBookingEvent @event)
         {
-            var category = new Booking()
+            var booking = new Booking()
             {
                 Id = @event.Id,
                 RequestedDate = DateTime.Now,
@@ -23,7 +23,7 @@ namespace AS.Application.Handlers
                 TicketId = @event.TicketId
             };
             
-            return _bookingRepository.CreateAsync(category);
+            return _bookingRepository.CreateAsync(booking);
         }
     }
 }

@@ -4,16 +4,8 @@ using AS.Domain.Entities.Externals.Amadeus;
 using AS.Domain.Entities.Externals.Skyscanner;
 using AS.Domain.Entities.References;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Net.Sockets;
-using System.Runtime.InteropServices.JavaScript;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Threading.Tasks;
 
 namespace AS.Worker.Services.BackgroudServices
 {

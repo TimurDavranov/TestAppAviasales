@@ -5,7 +5,6 @@ using AS.Core.Events;
 using AS.Core.Factories;
 using AS.Core.Helpers;
 using AS.Domain;
-using AS.Worker;
 using AS.Worker.Services.BackgroudServices;
 using Microsoft.EntityFrameworkCore;
 

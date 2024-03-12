@@ -1,7 +1,6 @@
 ﻿using AS.Core.Configurations;
 using AS.Core.Primitives;
 using Microsoft.AspNetCore.Authentication.BearerToken;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity.Data;
 
 namespace AS.Infrastructure.Services

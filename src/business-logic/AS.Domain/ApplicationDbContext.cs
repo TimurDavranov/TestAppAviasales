@@ -3,11 +3,6 @@ using AS.Domain.Entities.Externals.Amadeus;
 using AS.Domain.Entities.Externals.Skyscanner;
 using AS.Domain.Entities.References;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AS.Domain;
 

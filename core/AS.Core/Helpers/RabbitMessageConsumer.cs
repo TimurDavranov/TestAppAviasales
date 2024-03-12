@@ -1,5 +1,4 @@
-﻿using AS.Core.Configurations;
-using RabbitMQ.Client;
+﻿using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
 namespace AS.Core.Helpers
