@@ -8,17 +8,25 @@ namespace AS.Core.Helpers
         (bool, IModel) Connect();
     }
 
-    public class RabbitConnection(ApplicationSettings _applicationSettings) : IRabbitConnection
+    public class RabbitConnection : IRabbitConnection
     {
+        private readonly ApplicationSettings _applicationSettings;
+        private bool _isConnected;
+        private IModel _channel;
+
+        public RabbitConnection(ApplicationSettings applicationSettings)
+        {
+            _applicationSettings = applicationSettings;
+        }
+
         public (bool, IModel) Connect()
         {
-            bool _isConnected;
-            IModel _channel;
             IConnection _connection;
             IConnectionFactory _factory;
 
             if (_applicationSettings?.RabbitMQSettings is null)
-                throw new ArgumentNullException(nameof(ApplicationSettings.RabbitMQSettings), "RabbitMQ settings is empty");
+                throw new ArgumentNullException(nameof(ApplicationSettings.RabbitMQSettings),
+                    "RabbitMQ settings is empty");
 
             if (string.IsNullOrEmpty(_applicationSettings.RabbitMQSettings.Url))
                 _factory = new ConnectionFactory

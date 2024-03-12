@@ -1,4 +1,4 @@
-﻿using AS.Application.Dtos;
+﻿using AS.Core.Configurations;
 using AS.Core.Factories;
 using AS.Domain;
 using AS.Domain.Entities.Aviasales;
@@ -9,10 +9,11 @@ namespace AS.Application.Repositories
     public interface IBookingRepository
     {
         Task<Guid> CreateAsync(Booking model);
-        Task<BookingInfoResponse[]> GetUserBookingsInfo(Guid userId);
+        Task<Booking?> Get(Guid Id);
+        Task UpdateAsync(Booking model);
     }
 
-    public sealed class BookingRepository(DatabaseContextFactory<ApplicationDbContext> _contextFactory) : IBookingRepository
+    public sealed class BookingRepository(DatabaseContextFactory<ApplicationDbContext> _contextFactory, ApplicationSettings _applicationSettings) : IBookingRepository
     {
         public async Task<Guid> CreateAsync(Booking model)
         {
@@ -24,24 +25,18 @@ namespace AS.Application.Repositories
             return model.Id;
         }
 
-        public async Task<BookingInfoResponse[]> GetUserBookingsInfo(Guid userId)
+        public Task<Booking?> Get(Guid Id)
+        {
+            using var context = _contextFactory.CreateContext();
+            return context.Bookings.FirstOrDefaultAsync(s => s.Id == Id);
+        }
+
+        public async Task UpdateAsync(Booking model)
         {
             using var context = _contextFactory.CreateContext();
 
-            var results = await context.Bookings
-                .Where(s => s.UserId == userId)
-                .AsSplitQuery()
-                .AsNoTracking()
-                .Select(s => new BookingInfoResponse
-                {
-                    RequestedDate = s.RequestedDate,
-                    ExpiresDate = s.ExpiresDate,
-                    Id = s.Id,
-                    TicketId = s.TicketId,
-                })
-                .ToArrayAsync();
-
-            return results;
+            context.Update(model);
+            await context.SaveChangesAsync();
         }
     }
 }

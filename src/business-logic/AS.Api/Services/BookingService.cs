@@ -1,9 +1,12 @@
 ﻿using AS.Api.Models;
+using AS.Application;
 using AS.Application.Dtos;
-using AS.Application.Repositories;
+using AS.Core.Configurations;
 using AS.Core.Constants;
 using AS.Core.Events;
 using AS.Core.Helpers;
+using Dapper;
+using Microsoft.Data.SqlClient;
 
 namespace AS.Api.Services
 {
@@ -11,10 +14,11 @@ namespace AS.Api.Services
     {
         Guid BookingCommand(BookingForm form, Guid userId);
         void BuyTicketCommand(Guid id, Guid ticketId);
-        Task<BookingInfoResponse[]> GetUserBookings(Guid userId);
+        Task<BookingInfoResponse[]> GetUserBookingsQuery(Guid userId);
     }
 
-    public class BookingService(IRabbitMessageProducer _rabbitMessageProducer, IBookingRepository _bookingRepository) : IBookingService
+    public class BookingService(IRabbitMessageProducer _rabbitMessageProducer, ApplicationSettings _applicationSettings)
+        : IBookingService
     {
         public Guid BookingCommand(BookingForm form, Guid userId)
         {
@@ -22,10 +26,12 @@ namespace AS.Api.Services
             {
                 Id = Guid.NewGuid(),
                 TicketId = Guid.NewGuid(),
-                UserId = userId
+                UserId = userId,
+                Source = form.Source
             };
 
-            _rabbitMessageProducer.Publish(ApplicationConstants.ASExchangeKey, ApplicationConstants.BookingRouteKey, ApplicationConstants.BookingQueueKey, @event);
+            _rabbitMessageProducer.Publish(ApplicationConstants.ASExchangeKey, ApplicationConstants.BookingRouteKey,
+                ApplicationConstants.BookingQueueKey, @event);
 
             return @event.Id;
         }
@@ -38,12 +44,19 @@ namespace AS.Api.Services
                 TicketId = ticketId
             };
 
-            _rabbitMessageProducer.Publish(ApplicationConstants.ASExchangeKey, ApplicationConstants.BookingRouteKey, ApplicationConstants.BookingQueueKey, @event);
+            _rabbitMessageProducer.Publish(ApplicationConstants.ASExchangeKey, ApplicationConstants.BookingRouteKey,
+                ApplicationConstants.BookingQueueKey, @event);
         }
 
-        public Task<BookingInfoResponse[]> GetUserBookings(Guid userId)
+        public async Task<BookingInfoResponse[]> GetUserBookingsQuery(Guid userId)
         {
-            return _bookingRepository.GetUserBookingsInfo(userId);
+            using var connection = new SqlConnection(_applicationSettings.DBConnectionString);
+            await connection.OpenAsync();
+            var results = await connection.QueryAsync<BookingInfoResponse>(QueryConst.GetUserBookingsInfoQuery,
+                new { UserId = userId.ToString() });
+            await connection.CloseAsync();
+
+            return results.ToArray();
         }
     }
 }

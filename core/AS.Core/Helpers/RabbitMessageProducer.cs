@@ -11,15 +11,16 @@ namespace AS.Core.Helpers
 
     public class RabbitMessageProducer : IRabbitMessageProducer
     {
-        private bool _isConnected;
-        private readonly IModel _channel;
-        public RabbitMessageProducer(IRabbitConnection _rabbitConnection)
+        private readonly IRabbitConnection _rabbitConnection;
+        public RabbitMessageProducer(IRabbitConnection rabbitConnection)
         {
-            (_isConnected, _channel) = _rabbitConnection.Connect();
+            _rabbitConnection = rabbitConnection;
         }
 
         public void Publish<T>(string exchange, string route, string queue, T message)
         {
+            var (_isConnected, _channel) = _rabbitConnection.Connect();
+            
             if (_isConnected)
             {
                 _channel.ExchangeDeclare(exchange, ExchangeType.Direct);

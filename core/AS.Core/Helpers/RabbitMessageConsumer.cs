@@ -11,18 +11,16 @@ namespace AS.Core.Helpers
 
     public sealed class RabbitMessageConsumer : IRabbitMessageConsumer
     {
-        private readonly bool _isConnected;
-        private readonly IModel _channel;
-        private readonly IConnection _connection;
-        private readonly IConnectionFactory _factory;
-
-        public RabbitMessageConsumer(IRabbitConnection _rabbitConnection)
+        private readonly IRabbitConnection _rabbitConnection;
+        public RabbitMessageConsumer(IRabbitConnection rabbitConnection)
         {
-            (_isConnected, _channel) = _rabbitConnection.Connect();
+            _rabbitConnection = rabbitConnection;
         }
 
         public void Consume(string exchangeKey, string routeKey, string queueKey, Action<object?, BasicDeliverEventArgs, IModel> action, uint prefetchSize, ushort prefetchCount)
         {
+            var (_isConnected, _channel) = _rabbitConnection.Connect();
+
             if (_isConnected)
             {
                 _channel.ExchangeDeclare(exchangeKey, ExchangeType.Direct);
@@ -36,7 +34,7 @@ namespace AS.Core.Helpers
                 {
                     action.Invoke(sender, args, _channel);
                 };
-                _channel.BasicQos(prefetchSize: prefetchSize, prefetchCount: prefetchCount, false);
+                // _channel.BasicQos(prefetchSize: prefetchSize, prefetchCount: prefetchCount, false);
                 _channel.BasicConsume(queueKey, false, consumer);
             }
             else throw new Exception("Connection to RabbitMQ service is closed");
@@ -44,6 +42,8 @@ namespace AS.Core.Helpers
 
         public void Consume(string exchangeKey, string routeKey, string queueKey, Func<object?, BasicDeliverEventArgs, IModel, Task> action, uint prefetchSize, ushort prefetchCount)
         {
+            var (_isConnected, _channel) = _rabbitConnection.Connect();
+            
             if (_isConnected)
             {
                 _channel.ExchangeDeclare(exchangeKey, ExchangeType.Direct);
@@ -56,9 +56,9 @@ namespace AS.Core.Helpers
                 consumer.Received += async (sender, args) =>
                 {
                     await action.Invoke(sender, args, _channel);
-                    _channel.BasicAck(args.DeliveryTag, true);
+                    _channel.BasicAck(args.DeliveryTag, false);
                 };
-                _channel.BasicQos(prefetchSize: prefetchSize, prefetchCount: prefetchCount, false);
+                // _channel.BasicQos(prefetchSize: prefetchSize, prefetchCount: prefetchCount, false);
                 _channel.BasicConsume(queueName, false, consumer);
             }
             else throw new Exception("Connection to RabbitMQ service is closed");

@@ -4,6 +4,7 @@ using AS.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AS.Migrator.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240312082104_add-ticketsource")]
+    partial class addticketsource
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -199,6 +202,9 @@ namespace AS.Migrator.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid>("AmadeusTicketId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("CityId")
                         .HasColumnType("uniqueidentifier");
 
@@ -215,10 +221,12 @@ namespace AS.Migrator.Migrations
                     b.Property<int>("Order")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("SkyscannerTicketId")
+                    b.Property<Guid?>("SkyscannerTicketId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AmadeusTicketId");
 
                     b.HasIndex("SkyscannerTicketId");
 
@@ -378,13 +386,17 @@ namespace AS.Migrator.Migrations
 
             modelBuilder.Entity("AS.Domain.Entities.Externals.Skyscanner.SkyscannerTicketDestination", b =>
                 {
-                    b.HasOne("AS.Domain.Entities.Externals.Skyscanner.SkyscannerTicket", "SkyscannerTicket")
-                        .WithMany("Destinations")
-                        .HasForeignKey("SkyscannerTicketId")
+                    b.HasOne("AS.Domain.Entities.Externals.Amadeus.AmadeusTicket", "AmadeusTicket")
+                        .WithMany()
+                        .HasForeignKey("AmadeusTicketId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("SkyscannerTicket");
+                    b.HasOne("AS.Domain.Entities.Externals.Skyscanner.SkyscannerTicket", null)
+                        .WithMany("Destinations")
+                        .HasForeignKey("SkyscannerTicketId");
+
+                    b.Navigation("AmadeusTicket");
                 });
 
             modelBuilder.Entity("AS.Domain.Entities.References.Airport", b =>

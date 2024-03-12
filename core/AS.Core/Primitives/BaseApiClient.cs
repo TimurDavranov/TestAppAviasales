@@ -53,6 +53,15 @@ namespace AS.Core.Primitives
             return await ConvertResponse<T>(request);
         }
 
+        protected virtual async Task<T> GetSimple<T>(string routeUrl) where T : class
+        {
+            var client = CreateHttpClient();
+
+            var request = await client.GetAsync(routeUrl);
+
+            return await ConvertResponseSimple<T>(request);
+        }
+
         protected virtual async Task<T> Post<T>(string routeUrl, object bodyData) where T : class
         {
             var client = CreateHttpClient();
@@ -61,6 +70,16 @@ namespace AS.Core.Primitives
             var content = new StringContent(serialized, Encoding.UTF8, "application/json");
             var request = await client.PostAsync(routeUrl, content);
             return await ConvertResponse<T>(request);
+        }
+
+        protected virtual async Task<T> PostSimple<T>(string routeUrl, object bodyData) where T : class
+        {
+            var client = CreateHttpClient();
+
+            var serialized = JsonSerializer.Serialize(bodyData);
+            var content = new StringContent(serialized, Encoding.UTF8, "application/json");
+            var request = await client.PostAsync(routeUrl, content);
+            return await ConvertResponseSimple<T>(request);
         }
 
         protected virtual async Task Put<T>(string routeUrl, object bodyData) where T : class
@@ -101,6 +120,28 @@ namespace AS.Core.Primitives
                     throw new Exception(response.Message);
 
                 return response.Data;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        private static async Task<T> ConvertResponseSimple<T>(HttpResponseMessage request) where T : class
+        {
+            try
+            {
+                if (request.StatusCode == HttpStatusCode.NotFound)
+                {
+                    throw new Exception($"{request.ReasonPhrase} {request.RequestMessage?.RequestUri}");
+                }
+
+                if (!request.IsSuccessStatusCode)
+                    throw new Exception(request.ReasonPhrase);
+
+                var response = await request.Content.ReadFromJsonAsync<T>(_options);
+
+                return response;
             }
             catch (Exception ex)
             {

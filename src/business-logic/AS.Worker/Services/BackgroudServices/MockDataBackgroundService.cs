@@ -193,7 +193,6 @@ namespace AS.Worker.Services.BackgroudServices
                     for (int ticketAmountIndex = 0; ticketAmountIndex < amountTicketsInDay; ticketAmountIndex++)
                     {
                         var (country, city, airport) = GetRandomReferences(ref countries, ref random);
-                        countries = countries.Where(s => s.Id != country.Id).ToArray();
 
                         var ticket = new AmadeusTicket
                         {
@@ -208,10 +207,10 @@ namespace AS.Worker.Services.BackgroudServices
                             AviaCompanyId = aviaCompanies[random.Next(0, aviaCompanies.Length)].Id
                         };
 
-                        var destinationReferences = GetSeveralRandomReferences(ref countries, ref random, ticketAmountIndex);
+                        var destinationReferences = GetSeveralRandomReferences(ref countries, ref random, transferAmount);
 
                         ticket.Destinations = [];
-                        for (int transferAmountIndex = 0; transferAmountIndex < amountTicketsInDay; transferAmountIndex++)
+                        for (int transferAmountIndex = 0; transferAmountIndex < transferAmount; transferAmountIndex++)
                         {
                             var (destinationCountry, destinationCity, destinationAirport) = destinationReferences[transferAmountIndex];
 
@@ -307,7 +306,6 @@ namespace AS.Worker.Services.BackgroudServices
                     for (int ticketAmountIndex = 0; ticketAmountIndex < amountTicketsInDay; ticketAmountIndex++)
                     {
                         var (country, city, airport) = GetRandomReferences(ref countries, ref random);
-                        countries = countries.Where(s => s.Id != country.Id).ToArray();
 
                         var ticket = new SkyscannerTicket
                         {
@@ -322,10 +320,10 @@ namespace AS.Worker.Services.BackgroudServices
                             AviaCompanyId = aviaCompanies[random.Next(0, aviaCompanies.Length)].Id
                         };
 
-                        var destinationReferences = GetSeveralRandomReferences(ref countries, ref random, ticketAmountIndex);
+                        var destinationReferences = GetSeveralRandomReferences(ref countries, ref random, transferAmount);
 
                         ticket.Destinations = [];
-                        for (int transferAmountIndex = 0; transferAmountIndex < amountTicketsInDay; transferAmountIndex++)
+                        for (int transferAmountIndex = 0; transferAmountIndex < transferAmount; transferAmountIndex++)
                         {
                             var (destinationCountry, destinationCity, destinationAirport) = destinationReferences[transferAmountIndex];
 

@@ -1,5 +1,4 @@
 ﻿using AS.Core.Primitives;
-using AS.Domain.Entities.Externals.Amadeus;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AS.Domain.Entities.Externals.Skyscanner
@@ -12,6 +11,6 @@ namespace AS.Domain.Entities.Externals.Skyscanner
         public Guid CityId { get; set; }
         public string AirportCode { get; set; }
         public DateTime DestinationDate { get; set; }
-        public AmadeusTicket AmadeusTicket { get; set; }
+        public SkyscannerTicket SkyscannerTicket { get; set; }
     }
 }

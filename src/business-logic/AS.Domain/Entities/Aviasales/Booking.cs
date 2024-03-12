@@ -11,6 +11,7 @@ namespace AS.Domain.Entities.Aviasales
         public DateTime RequestedDate { get; set; }
         public DateTime ExpiresDate { get; set; }
         public Guid TicketId { get; set; }
+        public TicketSource Source { get; set; }
         public BookingStatus Status { get; set; }
         public string? Error { get; set; }
     }
