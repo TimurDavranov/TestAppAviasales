@@ -8,14 +8,22 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using Serilog.Events;
+using Serilog;
+using AS.Core.Middlewares;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Information()
+            .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+            .Enrich.FromLogContext()
+            .WriteTo.Console()
+            .CreateLogger();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
 
@@ -48,6 +56,10 @@ builder.Services.AddSwaggerGen(c =>
             new string[] {}
         }
     });
+    
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    c.IncludeXmlComments(xmlPath);
 });
 
 builder.Services.AddCors(options =>
@@ -78,10 +90,15 @@ builder.Services.AddSingleton(new DatabaseContextFactory<IdentityDbContext>(dbOp
 
 var app = builder.Build();
 
+app.UseMiddleware<RequestResponseLoggingMiddleware>();
+
 app.UseSwagger()
     .UseAuthentication()
     .UseAuthorization();
-app.UseSwaggerUI()
+app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+    })
     .UseAuthentication()
     .UseAuthorization();
 

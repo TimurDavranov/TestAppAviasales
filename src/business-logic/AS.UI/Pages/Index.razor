@@ -1,0 +1,63 @@
+﻿@page "/"
+@using AS.UI.Services
+@using Blazored.LocalStorage
+
+@inject AccountService _service
+@inject NavigationManager _navigation
+@inject ILocalStorageService _localStorageService
+
+<PageTitle>Index</PageTitle>
+
+<h1>Hello, world!</h1>
+
+Welcome to your new app.
+
+<SurveyPrompt Title="How is Blazor working for you?" />
+
+@if (string.IsNullOrWhiteSpace(token))
+{
+    <div style="width: 40%">
+        <label>Логин</label>
+        <input type="text" class="form-control" @bind="login" />
+        <label>Пароль</label>
+        <input type="text" class="form-control" @bind="password" />
+        <button class="btn btn-primary" @onclick="Login">Вход</button>
+    </div>
+}
+else
+{
+    <button class="form-control" @onclick="Logout">Выход</button>
+}
+
+@code {
+    private string login = "";
+    private string password = "";
+    private string token = "";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        token = await _localStorageService.GetItemAsStringAsync("token") ?? string.Empty;
+        await  base.OnParametersSetAsync();
+    }
+
+    private async Task Login()
+    {
+        var tokenResponse = await _service.Login(new Microsoft.AspNetCore.Identity.Data.LoginRequest
+            {
+                Email = login,
+                Password = password,
+                TwoFactorCode = "",
+                TwoFactorRecoveryCode = ""
+            });
+
+        await _localStorageService.SetItemAsStringAsync("token", tokenResponse.AccessToken);
+        token = tokenResponse.AccessToken;
+        StateHasChanged();
+    }
+
+    private async Task Logout()
+    {
+        await _localStorageService.RemoveItemAsync("token");
+        _navigation.NavigateTo("/", true);
+    }
+}

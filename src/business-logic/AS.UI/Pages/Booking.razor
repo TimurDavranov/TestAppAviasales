@@ -1,0 +1,84 @@
+﻿@page "/bookings"
+@using AS.Application.Dtos
+@using AS.Core.Enums
+@using AS.UI.Services
+
+@inject BackendService _service
+@inject NavigationManager _navigation
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>RequestedDate</th>
+            <th>ExpiresDate</th>
+            <th>TicketId</th>
+            <th>Title</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in list)
+        {
+            <tr>
+                <td>@item.Id</td>
+                <td>@item.RequestedDate</td>
+                <td>@item.ExpiresDate</td>
+                <td>@item.TicketId</td>
+                <td>@item.Title</td>
+                <td>@item.Status.ToString()</td>
+                <td>
+                    @if (item.Status == BookingStatus.New)
+                    {
+                        <button class="btn btn-primary" @onclick="async() => await Buy(item.Id, item.Source, item.TicketId)">
+                            Купить
+                        </button>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private BookingInfoResponse[] list = [];
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await Load();
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    private async Task Load()
+    {
+        try
+        {
+            list = await _service.GetUserBookings();
+            StateHasChanged();
+        }
+        catch (Exception)
+        {
+            _navigation.NavigateTo("/");
+        }
+    }
+
+    private async Task Buy(Guid id, TicketSource source, Guid ticketId)
+    {
+        try
+        {
+            await _service.BuyTicket(id.ToString(), new Data.BookingForm
+                {
+                    Source = source,
+                    TicketId = ticketId
+                });
+
+            list = list.Where(s => s.Id != id).ToArray();
+            StateHasChanged();
+        }
+        catch (Exception)
+        {
+            _navigation.NavigateTo("/");
+        }
+    }
+}

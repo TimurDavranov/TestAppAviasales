@@ -2,6 +2,7 @@
 {
     public sealed class BaseApiResponse<T>
     {
+        public BaseApiResponse() { }
         public BaseApiResponse(T? data)
         {
             this.Data = data;
@@ -15,7 +16,9 @@
         }
 
         public T? Data { get; set; }
+
         public string Message { get; set; }
+
         public bool Success { get; set; }
     }
 }

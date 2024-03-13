@@ -13,7 +13,7 @@ namespace AS.Application.Handlers
 
     public class EventHandler(IBookingRepository _bookingRepository) : IEventHandler
     {
-        public Task Handle(SendBookingEvent @event)
+        public async Task Handle(SendBookingEvent @event)
         {
             var booking = new Booking()
             {
@@ -25,12 +25,12 @@ namespace AS.Application.Handlers
                 TicketId = @event.TicketId
             };
 
-            return _bookingRepository.CreateAsync(booking);
+            await _bookingRepository!.CreateAsync(booking);
         }
 
         public async Task Handle(BuyTicketEvent @event)
         {
-            var booking = await _bookingRepository.Get(@event.Id);
+            var booking = await _bookingRepository!.Get(@event.Id);
             if (booking is null)
                 return;
 

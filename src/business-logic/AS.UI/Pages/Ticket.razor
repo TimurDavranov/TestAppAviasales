@@ -1,0 +1,135 @@
+﻿@page "/tickets"
+@using AS.Application.Dtos
+@using AS.Core.Enums
+@using AS.Core.Primitives
+@using AS.UI.Services
+
+@inject BackendService _service
+@inject NavigationManager _navigation
+
+<input type="text" class="form-control" style="width: 30%" @bind="filter.SearchText"/>
+<button class="btn btn-primary" @onclick="Load">Search</button>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>TicketId</th>
+            <th>Source</th>
+            <th>DepartureDate</th>
+            <th>DeparturePlace</th>
+            <th>DestinationDate</th>
+            <th>DestinationPlace</th>
+            <th>TransferCount</th>
+            <th>TicketPrice</th>
+            <th>TicketCount</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in list.Data)
+        {
+            <tr>
+                <td>@item.TicketId</td>
+                <td>@item.Source</td>
+                <td>@item.DepartureDate</td>
+                <td>@item.DeparturePlace</td>
+                <td>@item.DestinationDate</td>
+                <td>@item.DestinationPlace</td>
+                <td>@item.TransferCount</td>
+                <td>@item.TicketPrice</td>
+                <td>@item.TicketCount</td>
+                <td>
+                    <button class="btn btn-primary" @onclick="async() => await Booking(item.Source, item.TicketId)">
+                        Забронировать
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<label>Total count: @list.Page</label>
+<select @onchange="async (e) => await ChangeSize(e)">
+    @for (var i = 20; i <= 40; i = i + 10)
+    {
+        if (filter.Size == i)
+        {
+            <option value="@i" selected>@i</option>
+        }
+        else
+        {
+            <option value="@i">@i</option>
+        }
+    }
+</select>
+<label>Total count: @list.TotalCount</label>
+<label>Total count: @list.TotalPages</label>
+<button @onclick="NextPage">След страница</button>
+<button @onclick="PreviousPage">Пред страница</button>
+
+@code {
+    private PagginationResult<TicketResponse[]> list = new() { Data = [] };
+    private FilterModel filter = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await Load();
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    private async Task Load()
+    {
+        try
+        {
+            list = await _service.FilterTicket(filter);
+            StateHasChanged();
+        }
+        catch (Exception)
+        {
+            _navigation.NavigateTo("/");
+        }
+    }
+
+    private async Task Booking(TicketSource source, Guid ticketId)
+    {
+        try
+        {
+            await _service.Booking(new Data.BookingForm
+                {
+                    Source = source,
+                    TicketId = ticketId
+                });
+            StateHasChanged();
+        }
+        catch (Exception)
+        {
+            _navigation.NavigateTo("/");
+        }
+    }
+
+    private async Task NextPage()
+    {
+        filter.Page = filter.Page + 1;
+
+        await Load();
+    }
+
+    private async Task PreviousPage()
+    {
+        if (filter.Page > 1)
+            filter.Page = filter.Page - 1;
+
+        await Load();
+    }
+
+    private async Task ChangeSize(ChangeEventArgs e)
+    {
+        if (!int.TryParse(e.Value.ToString(), out var size))
+            size = 20;
+
+        filter.Size = size;
+
+        await Load();
+    }
+}

@@ -10,7 +10,7 @@ namespace AS.Core.Primitives
     public abstract class BaseApiClient
     {
         protected string _baseUrl { get; }
-        private static readonly JsonSerializerOptions _options = new JsonSerializerOptions()
+        public static readonly JsonSerializerOptions _options = new JsonSerializerOptions()
         {
             PropertyNameCaseInsensitive = true,
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -32,39 +32,41 @@ namespace AS.Core.Primitives
             _httpContext = httpContext;
         }
 
-        protected HttpClient CreateHttpClient()
+        protected virtual HttpClient CreateHttpClient(string token = "")
         {
             var client = _factory.CreateClient();
             client.BaseAddress = new Uri(_baseUrl);
 
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", GetToken());
+            if (string.IsNullOrWhiteSpace(token))
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", GetToken());
+            else client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             return client;
         }
 
-        protected virtual async Task<T> Get<T>(string routeUrl) where T : class
+        protected virtual async Task<T> Get<T>(string routeUrl, string token = "") where T : class
         {
-            var client = CreateHttpClient();
+            var client = CreateHttpClient(token);
 
             var request = await client.GetAsync(routeUrl);
 
             return await ConvertResponse<T>(request);
         }
 
-        protected virtual async Task<T> GetSimple<T>(string routeUrl) where T : class
+        protected virtual async Task<T> GetSimple<T>(string routeUrl, string token = "") where T : class
         {
-            var client = CreateHttpClient();
+            var client = CreateHttpClient(token);
 
             var request = await client.GetAsync(routeUrl);
 
             return await ConvertResponseSimple<T>(request);
         }
 
-        protected virtual async Task<T> Post<T>(string routeUrl, object bodyData) where T : class
+        protected virtual async Task<T> Post<T>(string routeUrl, object bodyData, string token = "") where T : class
         {
-            var client = CreateHttpClient();
+            var client = CreateHttpClient(token);
 
             var serialized = JsonSerializer.Serialize(bodyData);
             var content = new StringContent(serialized, Encoding.UTF8, "application/json");
@@ -72,9 +74,9 @@ namespace AS.Core.Primitives
             return await ConvertResponse<T>(request);
         }
 
-        protected virtual async Task<T> PostSimple<T>(string routeUrl, object bodyData) where T : class
+        protected virtual async Task<T> PostSimple<T>(string routeUrl, object bodyData, string token = "") where T : class
         {
-            var client = CreateHttpClient();
+            var client = CreateHttpClient(token);
 
             var serialized = JsonSerializer.Serialize(bodyData);
             var content = new StringContent(serialized, Encoding.UTF8, "application/json");
@@ -82,9 +84,9 @@ namespace AS.Core.Primitives
             return await ConvertResponseSimple<T>(request);
         }
 
-        protected virtual async Task Put<T>(string routeUrl, object bodyData) where T : class
+        protected virtual async Task Put<T>(string routeUrl, object bodyData, string token = "") where T : class
         {
-            var client = CreateHttpClient();
+            var client = CreateHttpClient(token);
             var serialized = JsonSerializer.Serialize(bodyData);
 
             var content = new StringContent(serialized, Encoding.UTF8, "application/json");
@@ -93,9 +95,9 @@ namespace AS.Core.Primitives
             await ConvertResponse<T>(request);
         }
 
-        protected virtual async Task Delete(string routeUrl)
+        protected virtual async Task Delete(string routeUrl, string token = "")
         {
-            var client = CreateHttpClient();
+            var client = CreateHttpClient(token);
 
             var request = await client.DeleteAsync(routeUrl);
 
@@ -114,7 +116,8 @@ namespace AS.Core.Primitives
                 if (!request.IsSuccessStatusCode)
                     throw new Exception(request.ReasonPhrase);
 
-                var response = await request.Content.ReadFromJsonAsync<BaseApiResponse<T>>(_options);
+                var json = await request.Content.ReadAsStringAsync();
+                var response = JsonSerializer.Deserialize<BaseApiResponse<T>>(json, _options);
 
                 if (!response.Success)
                     throw new Exception(response.Message);

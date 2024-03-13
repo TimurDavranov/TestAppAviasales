@@ -18,12 +18,19 @@ namespace AS.Worker.Services.BackgroudServices
             consumer.Consume(ApplicationConstants.ASExchangeKey, ApplicationConstants.BookingRouteKey, ApplicationConstants.BookingQueueKey,
                 async (sender, args, channel) =>
                     {
-                        var body = Encoding.UTF8.GetString(args.Body.ToArray());
-                        var options = new JsonSerializerOptions { Converters = { new EventJsonConverter() } };
-                        var message = JsonSerializer.Deserialize<BaseEvent>(Encoding.UTF8.GetString(args.Body.ToArray()), options);
+                        try
+                        {
+                            var body = Encoding.UTF8.GetString(args.Body.ToArray());
+                            var options = new JsonSerializerOptions { Converters = { new EventJsonConverter() } };
+                            var message = JsonSerializer.Deserialize<BaseEvent>(Encoding.UTF8.GetString(args.Body.ToArray()), options);
 
-                        if (message is not null)
-                            await _dispatcher.SendNoContentAsync(message);
+                            if (message is not null)
+                                await _dispatcher.SendNoContentAsync(message);
+                        }
+                        catch(Exception ex) 
+                        {
+                            var asd = "";
+                        }
                     },
                 1, 1);
 

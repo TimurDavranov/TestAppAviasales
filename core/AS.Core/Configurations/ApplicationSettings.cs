@@ -4,6 +4,8 @@
     {
         public string DBConnectionString { get; set; }
 
+        public string BackendEndpoint { get; set; }
+
         public InternalServiceSettings InternalServiceSettings { get; set; }
 
         public RabbitMQSettings RabbitMQSettings { get; set; }

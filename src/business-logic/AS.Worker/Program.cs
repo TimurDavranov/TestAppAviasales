@@ -9,7 +9,6 @@ using AS.Worker.Services.BackgroudServices;
 using Microsoft.EntityFrameworkCore;
 
 var builder = Host.CreateApplicationBuilder(args);
-builder.Services.AddHostedService<MockDataBackgroundService>();
 
 var settings = new ApplicationSettings();
 builder.Configuration.GetSection(nameof(ApplicationSettings)).Bind(settings);
@@ -26,14 +25,16 @@ builder.Services
     .AddDbContext<IApplicationDbContext, ApplicationDbContext>(dbOptions, ServiceLifetime.Scoped);
 builder.Services.AddSingleton(new DatabaseContextFactory<ApplicationDbContext>(dbOptions));
 
-builder.Services.AddScoped<IEventHandler, AS.Application.Handlers.EventHandler>();
+builder.Services.AddTransient<IEventHandler, AS.Application.Handlers.EventHandler>();
 
-builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+builder.Services.AddTransient<IBookingRepository, BookingRepository>();
 
 builder.Services.AddSingleton<IRabbitConnection, RabbitConnection>();
 builder.Services.AddSingleton<IRabbitMessageConsumer, RabbitMessageConsumer>();
 builder.Services.AddSingleton<IRabbitMessageProducer, RabbitMessageProducer>();
 
+builder.Services.AddHostedService<MockDataBackgroundService>();
+builder.Services.AddHostedService<BookingBackgroundService>();
 builder.Services.AddHostedService<BookingConsumer>();
 
 var eventHandler = builder.Services.BuildServiceProvider().GetService<IEventHandler>();

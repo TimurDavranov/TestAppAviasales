@@ -25,7 +25,7 @@ namespace AS.Api.Services
             var @event = new SendBookingEvent()
             {
                 Id = Guid.NewGuid(),
-                TicketId = Guid.NewGuid(),
+                TicketId = form.TicketId,
                 UserId = userId,
                 Source = form.Source
             };

@@ -11,41 +11,45 @@ namespace AS.Worker.Services.BackgroudServices
 {
     public class MockDataBackgroundService(DatabaseContextFactory<ApplicationDbContext> _contextFactory) : BackgroundService
     {
-        private JsonObject[] countryJObjects;
-        private JsonObject[] airports;
-        private string[] aviaCompanies;
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            ReadJson();
-            //await AddReferences(stoppingToken);
-            //await AddAviaCompanies(stoppingToken);
-            await AddExternals(stoppingToken);
+            try
+            {
+                Task.Factory.StartNew(async () =>
+                {
+                    using var countriesSR = new StreamReader("countries_states_cities.json");
+                    string countriesJson = countriesSR.ReadToEnd();
+                    var countryJObjects = JsonSerializer.Deserialize<JsonObject[]>(countriesJson)!;
+
+                    using var airportsSR = new StreamReader("airports.json");
+                    string airportsJson = airportsSR.ReadToEnd();
+                    var airportsJObject = JsonSerializer.Deserialize<Dictionary<string, JsonObject>>(airportsJson)!
+                        .Select(s => s.Value)
+                        .ToArray();
+
+                    using var aviaCompaniesSR = new StreamReader("aviacompany_names.json");
+                    string aviaCompaniesJson = aviaCompaniesSR.ReadToEnd();
+                    var aviaCompaniesJObject = JsonSerializer.Deserialize<string[]>(aviaCompaniesJson)!
+                        .Where(s => !string.IsNullOrWhiteSpace(s) && s.Length > 3)
+                        .ToArray();
+
+                    await AddReferences(stoppingToken, countryJObjects, airportsJObject);
+                    await AddAviaCompanies(stoppingToken, aviaCompaniesJObject);
+                    await AddExternals(stoppingToken);
+                });
+
+            }
+            catch (Exception)
+            {
+
+            }
         }
 
-        private void ReadJson()
-        {
-            using var countriesSR = new StreamReader("countries_states_cities.json");
-            string countriesJson = countriesSR.ReadToEnd();
-            countryJObjects = JsonSerializer.Deserialize<JsonObject[]>(countriesJson)!;
-
-            using var airportsSR = new StreamReader("airports.json");
-            string airportsJson = airportsSR.ReadToEnd();
-            airports = JsonSerializer.Deserialize<Dictionary<string, JsonObject>>(airportsJson)!
-                .Select(s => s.Value)
-                .ToArray();
-
-            using var aviaCompaniesSR = new StreamReader("aviacompany_names.json");
-            string aviaCompaniesJson = aviaCompaniesSR.ReadToEnd();
-            aviaCompanies = JsonSerializer.Deserialize<string[]>(aviaCompaniesJson)!
-                .Where(s => !string.IsNullOrWhiteSpace(s) && s.Length > 3)
-                .ToArray();
-        }
-
-        private async Task AddReferences(CancellationToken stoppingToken)
+        private async Task AddReferences(CancellationToken stoppingToken, JsonObject[] countryJObjects, JsonObject[] airports)
         {
             using var context = _contextFactory.CreateContext();
 
-            foreach (var country in BuildReferences())
+            foreach (var country in BuildReferences(countryJObjects, airports))
             {
                 var countryEntity = await context.Country
                     .Include(s => s.States).ThenInclude(s => s.Cities).ThenInclude(s => s.Airports)
@@ -113,7 +117,7 @@ namespace AS.Worker.Services.BackgroudServices
                 await context.SaveChangesAsync(stoppingToken);
         }
 
-        private async Task AddAviaCompanies(CancellationToken stoppingToken)
+        private async Task AddAviaCompanies(CancellationToken stoppingToken, string[] aviaCompanies)
         {
             var context = _contextFactory.CreateContext();
 
@@ -435,7 +439,7 @@ namespace AS.Worker.Services.BackgroudServices
             return list;
         }
 
-        private IEnumerable<Country> BuildReferences()
+        private IEnumerable<Country> BuildReferences(JsonObject[] countryJObjects, JsonObject[] airports)
         {
             foreach (var country in countryJObjects)
             {

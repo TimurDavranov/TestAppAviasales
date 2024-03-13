@@ -25,10 +25,11 @@ namespace AS.Application.Repositories
             return model.Id;
         }
 
-        public Task<Booking?> Get(Guid Id)
+        public async Task<Booking?> Get(Guid Id)
         {
             using var context = _contextFactory.CreateContext();
-            return context.Bookings.FirstOrDefaultAsync(s => s.Id == Id);
+            var result = await context.Bookings.AsNoTracking().FirstOrDefaultAsync(s => s.Id == Id);
+            return result;
         }
 
         public async Task UpdateAsync(Booking model)

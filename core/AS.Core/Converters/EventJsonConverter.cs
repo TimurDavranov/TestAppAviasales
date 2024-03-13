@@ -29,6 +29,7 @@ namespace AS.Core.Converters
             return typeDiscriminator switch
             {
                 nameof(SendBookingEvent) => JsonSerializer.Deserialize<SendBookingEvent>(json, options)!,
+                nameof(BuyTicketEvent) => JsonSerializer.Deserialize<BuyTicketEvent>(json, options)!,
                 _ => throw new JsonException($"{typeDiscriminator} is not supported yet!")
             };
         }
