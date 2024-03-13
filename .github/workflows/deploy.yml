@@ -14,7 +14,7 @@ env:
   UI_PORT: 10000:10000
   API_PORT: 10001:10001
   
-  REPO_NAME: ${{ github.repository }}
+  REPO_NAME: timurdavranov/testappaviasales
   REGISTRY: ghcr.io
 #   SSH_HOST: ${{ secrets.SERVER_IP }}
 #   SSH_USER: ${{ secrets.SERVER_USERNAME }}
