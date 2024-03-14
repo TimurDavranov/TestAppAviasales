@@ -24,7 +24,7 @@ namespace AS.Api.Controllers
             {
                 results = await _bookingService.GetUserBookingsQuery(UserId);
 
-                _redisService.SetValue(UserId.ToString(), results, TimeSpan.FromSeconds(10));
+                _redisService.SetValue(UserId.ToString(), results, TimeSpan.FromSeconds(5));
             }
 
             return Ok(results);
@@ -45,7 +45,7 @@ namespace AS.Api.Controllers
             {
                 results = await _ticketService.FilterTickets(filter);
 
-                _redisService.SetValue(FilterModel.ToRequestKey(filter), results, TimeSpan.FromSeconds(10));
+                _redisService.SetValue(FilterModel.ToRequestKey(filter), results, TimeSpan.FromSeconds(5));
             }
             
             return Ok(results);

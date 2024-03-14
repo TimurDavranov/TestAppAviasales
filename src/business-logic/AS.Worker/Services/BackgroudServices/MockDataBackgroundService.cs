@@ -13,9 +13,9 @@ namespace AS.Worker.Services.BackgroudServices
     {
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            try
+            Task.Factory.StartNew(async () =>
             {
-                Task.Factory.StartNew(async () =>
+                try
                 {
                     using var countriesSR = new StreamReader("countries_states_cities.json");
                     string countriesJson = countriesSR.ReadToEnd();
@@ -24,25 +24,25 @@ namespace AS.Worker.Services.BackgroudServices
                     using var airportsSR = new StreamReader("airports.json");
                     string airportsJson = airportsSR.ReadToEnd();
                     var airportsJObject = JsonSerializer.Deserialize<Dictionary<string, JsonObject>>(airportsJson)!
-                        .Select(s => s.Value)
-                        .ToArray();
+                            .Select(s => s.Value)
+                            .ToArray();
 
                     using var aviaCompaniesSR = new StreamReader("aviacompany_names.json");
                     string aviaCompaniesJson = aviaCompaniesSR.ReadToEnd();
                     var aviaCompaniesJObject = JsonSerializer.Deserialize<string[]>(aviaCompaniesJson)!
-                        .Where(s => !string.IsNullOrWhiteSpace(s) && s.Length > 3)
-                        .ToArray();
+                            .Where(s => !string.IsNullOrWhiteSpace(s) && s.Length > 3)
+                            .ToArray();
 
                     await AddReferences(stoppingToken, countryJObjects, airportsJObject);
                     await AddAviaCompanies(stoppingToken, aviaCompaniesJObject);
                     await AddExternals(stoppingToken);
-                });
 
-            }
-            catch (Exception)
-            {
-
-            }
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine(ex.Message);
+                }
+            }, stoppingToken);
         }
 
         private async Task AddReferences(CancellationToken stoppingToken, JsonObject[] countryJObjects, JsonObject[] airports)

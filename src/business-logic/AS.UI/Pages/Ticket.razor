@@ -3,9 +3,11 @@
 @using AS.Core.Enums
 @using AS.Core.Primitives
 @using AS.UI.Services
+@using Blazored.LocalStorage
 
 @inject BackendService _service
 @inject NavigationManager _navigation
+@inject ILocalStorageService _localStorageService
 
 <input type="text" class="form-control" style="width: 30%" @bind="filter.SearchText"/>
 <button class="btn btn-primary" @onclick="Load">Search</button>
@@ -87,6 +89,7 @@
         }
         catch (Exception)
         {
+            await _localStorageService.RemoveItemAsync("token");
             _navigation.NavigateTo("/");
         }
     }
@@ -104,6 +107,7 @@
         }
         catch (Exception)
         {
+            await _localStorageService.RemoveItemAsync("token");
             _navigation.NavigateTo("/");
         }
     }

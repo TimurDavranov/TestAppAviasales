@@ -2,9 +2,11 @@
 @using AS.Application.Dtos
 @using AS.Core.Enums
 @using AS.UI.Services
+@using Blazored.LocalStorage
 
 @inject BackendService _service
 @inject NavigationManager _navigation
+@inject ILocalStorageService _localStorageService
 
 <table class="table">
     <thead>
@@ -14,6 +16,8 @@
             <th>ExpiresDate</th>
             <th>TicketId</th>
             <th>Title</th>
+            <th>Status</th>
+            <th>Message</th>
             <th>Action</th>
         </tr>
     </thead>
@@ -27,6 +31,7 @@
                 <td>@item.TicketId</td>
                 <td>@item.Title</td>
                 <td>@item.Status.ToString()</td>
+                <td>@item.Message</td>
                 <td>
                     @if (item.Status == BookingStatus.New)
                     {
@@ -59,6 +64,7 @@
         }
         catch (Exception)
         {
+            await _localStorageService.RemoveItemAsync("token");
             _navigation.NavigateTo("/");
         }
     }
@@ -78,6 +84,7 @@
         }
         catch (Exception)
         {
+            await _localStorageService.RemoveItemAsync("token");
             _navigation.NavigateTo("/");
         }
     }

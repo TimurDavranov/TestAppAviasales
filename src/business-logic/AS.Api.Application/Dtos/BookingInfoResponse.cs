@@ -10,6 +10,7 @@ namespace AS.Application.Dtos
         public Guid TicketId { get; set; }
         public TicketSource Source { get; set; }
         public BookingStatus Status { get; set; }
+        public string Message { get; set; }
         public string Title { get; set; }
     }
 }

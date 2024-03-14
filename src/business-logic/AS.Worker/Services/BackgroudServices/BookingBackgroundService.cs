@@ -25,12 +25,19 @@ namespace AS.Worker.Services.BackgroudServices
         private async Task DoWork(CancellationToken stoppingToken)
         {
             var context = _contextFactory.CreateContext();
+
             var bookings = await context.Bookings
                 .Where(s => s.Status == Core.Enums.BookingStatus.New && s.ExpiresDate < DateTime.Now)
-                .ExecuteUpdateAsync(p =>
-                    p.SetProperty(s => s.Status, Core.Enums.BookingStatus.Failed)
-                    .SetProperty(s => s.Error, "Истек срок оплаты авиабилета"));
-            await context.SaveChangesAsync();
+                .ToListAsync();
+            bookings.ForEach(booking =>
+            {
+                booking.Status = Core.Enums.BookingStatus.Failed;
+                booking.Error = "Истек срок оплаты авиабилета";
+            });
+
+            if (context.ChangeTracker.Entries().Any(s => s.State is EntityState.Modified or EntityState.Added))
+                await context.SaveChangesAsync();
+
             await Task.Delay(TimeSpan.FromSeconds(1));
         }
     }
